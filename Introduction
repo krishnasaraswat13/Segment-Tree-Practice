@@ -1,0 +1,14 @@
+//in a segment tree, we can perform two types of operations:
+//1. update the value of an element in the array
+//2. query the sum of a range of elements in the array 
+//actually use of segment tree comes when we have to perform multiple updates and queries on the array, as it allows us to perform both operations in logarithmic time complexity.
+//the segment tree is a binary tree, where each node represents a segment of the array.
+//the leaf nodes of the segment tree represent the individual elements of the array, and the internal nodes represent the sum of the segments of the array.
+//when we thik about fiinding the sum of a range of elements in the array, we can break down the range into smaller segments that are represented by the nodes of the segment tree, and then we can sum up the values of those nodes to get the final result.
+//we can think of a diect brute force approach but it takes O(n) time to find the sum of a range of elements in the array, and if we have to perform multiple queries, it can be very inefficient. and o(1) time to update the value of an element in the array, and if we have to perform multiple updates, it can also be very inefficient.
+//same if we think of prefix sum approach, it takes O(n) time to build the prefix sum array, and O(1) time to find the sum of a range of elements in the array, but if we have to perform multiple updates, it can be very inefficient as we have to update the prefix sum array every time we update an element in the array.
+//the segment tree allows us to perform both operations in logarithmic time complexity, which makes it very efficient for performing multiple updates and queries on the array.
+ //there are two types of tree as complete binary tree and full binary tree, in complete binary tree all levels are completely filled except possibly the last level, and the last level has all keys as left as possible. in full binary tree every node other than the leaves has two children. the segment tree is a full binary tree, as every node other than the leaves has two children but not a complete binary tree, as the last level may not be completely filled.
+ //the segment tree can be implemented using an array, where the parent node is at index i, the left child is at index 2*i+1, and the right child is at index 2*i+2.
+//the segment tree can also be implemented using a class, where each node of the segment tree is represented by an object of the class, and the left and right children are represented by the left and right pointers of the object.
+//there is height of the segment tree is log(n), where n is the number of elements in the array, and the total number of nodes in the segment tree is 2*n-1, where n is the number of elements in the array. 
