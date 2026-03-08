@@ -1,0 +1,81 @@
+//for example we want to calculate sum of a range of elements in the array, we can break down the range into smaller segments that are represented by the nodes of the segment tree, and then we can sum up the values of those nodes to get the final result.
+class Solution {
+    class SegmentTreeNode {
+        int start, end, sum;
+        SegmentTreeNode left, right;
+
+        public SegmentTreeNode(int start, int end) {
+            this.start = start;
+            this.end = end;
+            this.sum = 0;
+            this.left = null;
+            this.right = null;
+        }
+    }
+
+    SegmentTreeNode root;
+
+    public Solution(int[] nums) {
+        root = buildSegmentTree(nums, 0, nums.length - 1);
+    }
+
+    private SegmentTreeNode buildSegmentTree(int[] nums, int start, int end) {
+        if (start > end) {
+            return null;
+        }
+        SegmentTreeNode node = new SegmentTreeNode(start, end);
+        if (start == end) {
+            node.sum = nums[start];
+            return node;
+        }
+        int mid = start + (end - start) / 2;
+        node.left = buildSegmentTree(nums, start, mid);
+        node.right = buildSegmentTree(nums, mid + 1, end);
+        node.sum = node.left.sum + node.right.sum;
+        return node;
+    }
+
+    public void update(int index, int val) {
+        update(root, index, val);
+    }
+
+    private void update(SegmentTreeNode node, int index, int val) {
+        if (node.start == node.end) {
+            node.sum = val;
+            return;
+        }
+        int mid = node.start + (node.end - node.start) / 2;
+        if (index <= mid) {
+            update(node.left, index, val);
+        } else {
+            update(node.right, index, val);
+        }
+        node.sum = node.left.sum + node.right.sum;
+    }
+
+    public int sumRange(int left, int right) {
+        return sumRange(root, left, right);
+    }
+
+    private int sumRange(SegmentTreeNode node, int left, int right) {
+        if (node.start > right || node.end < left) {
+            return 0; // No overlap
+        }
+        if (node.start >= left && node.end <= right) {
+            return node.sum; // Total overlap
+        }
+        // Partial overlap
+        return sumRange(node.left, left, right) + sumRange(node.right, left, right);
+    }
+}
+//or
+private int sumRange(int arr[],int qi,int qj,int si,int sj,int index){
+        if(qi>sj || qj<si){
+            return 0; //no overlap
+        }
+        if(qi<=si && qj>=sj){
+            return arr[index]; //total overlap
+        }
+        int mid=si+(sj-si)/2;
+        return sumRange(arr,qi,qj,si,mid,2*index+1)+sumRange(arr,qi,qj,mid+1,sj,2*index+2); //partial overlap
+    }
