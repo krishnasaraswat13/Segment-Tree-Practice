@@ -1,0 +1,17 @@
+public static void update(int[] arr, int index, int val) {
+       int n= arr.length;
+       int diff=val-arr[index];
+       arr[index]=val;
+       updateutil(arr, 0, n-1, index, diff);
+    }
+    public static void updateutil(int[] arr, int start, int end, int index, int diff) {
+        if (index < start || index > end) {
+            return;
+        }
+        arr[start] += diff;
+        if (start != end) {
+            int mid = start + (end - start) / 2;
+            updateutil(arr, start, mid, index, diff);
+            updateutil(arr, mid + 1, end, index, diff);
+        }
+    }
