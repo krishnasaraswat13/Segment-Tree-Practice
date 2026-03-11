@@ -1,0 +1,62 @@
+class NumArray {
+   
+    int st[]; 
+    int ori[];
+    public NumArray(int[] nums) {
+        int n=nums.length;
+        st = new int[4 * n]; 
+        ori=nums.clone();
+        buildST(nums, 0, n - 1, 0);
+    }
+    
+    public void update(int index, int val) {
+       int n= ori.length;
+       int diff=val-ori[index];
+       ori[index]=val;
+       updateutil(0, 0, n-1, index, diff);
+    }
+    public void updateutil(int si, int start, int end, int index, int diff) {
+        if (index < start || index > end) {
+            return;
+        }
+        st[si] += diff;
+        if (start != end) {
+            int mid = start + (end - start) / 2;
+            updateutil(2*si+1,start, mid, index, diff);
+            updateutil(2*si+2,mid + 1, end, index, diff);
+        }
+    }
+    
+    public int sumRange(int left, int right) {
+        return sumRanges(left,right,0,ori.length-1,0);
+    }
+    public int sumRanges(int qi,int qj,int si,int sj,int index){
+        if(qi>sj || qj<si){
+            return 0; 
+        }
+        if(qi<=si && qj>=sj){
+            return st[index]; 
+        }
+        int mid=si+(sj-si)/2;
+        return sumRanges(qi,qj,si,mid,2*index+1)+sumRanges(qi,qj,mid+1,sj,2*index+2); 
+    }
+        
+    
+    public void buildST(int arr[],  int ss, int se, int si) {
+        if (ss == se) {
+            st[si] = arr[ss];
+            return;
+        }
+        int mid = (ss + se) / 2;
+        buildST(arr,ss, mid, si * 2 + 1);
+        buildST(arr,  mid + 1, se, si * 2 + 2);
+        st[si] = st[si * 2 + 1] + st[si * 2 + 2];
+    }
+}
+
+/**
+ * Your NumArray object will be instantiated and called as such:
+ * NumArray obj = new NumArray(nums);
+ * obj.update(index,val);
+ * int param_2 = obj.sumRange(left,right);
+ */
