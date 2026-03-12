@@ -1,0 +1,83 @@
+class Solution {
+    // Returns a vector<int> of size 2 where:
+    // [0] = minimum value in arr from index L to R (inclusive),
+    // [1] = maximum value in arr from index L to R (inclusive).
+    // Uses the prebuilt segTree where each node stores [min, max].
+    // Segment tree indexing:
+    // - For a node at idx, left child is at 2*idx + 1, right child at 2*idx + 2.
+    public int[] getMinMax(int[] arr, int L, int R, int[][] segTree) {
+        // code here
+        int[] ans=new  int[2];
+        ans[0]=getMin(segTree,0,arr.length-1,L,R,0);
+        ans[1]=getMax(segTree,0,arr.length-1,L,R,0);
+        return ans;
+        
+    }
+    public  int getMax(int st[][], int ss, int se, int qs, int qe, int si) {
+    if (qs > se || qe < ss) {
+        return Integer.MIN_VALUE; // No overlap //-infinity so that we compare with max and it will not affect the result and other will be chosen
+
+    }
+    if (qs <= ss && qe >= se) {
+        return st[si][1]; // Total overlap
+    } //partial overlap
+    int mid = (ss + se) / 2;
+    return Math.max(getMax(st, ss, mid, qs, qe, 2 * si + 1),
+                    getMax(st, mid + 1, se, qs, qe, 2 * si + 2));
+
+}  
+    public  int getMin(int st[][], int ss, int se, int qs, int qe, int si) {
+    if (qs > se || qe < ss) {
+        return Integer.MAX_VALUE; // No overlap //infinity so that we compare with min and it will not affect the result and other will be chosen
+
+    }
+    if (qs <= ss && qe >= se) {
+        return st[si][0]; // Total overlap
+    } //partial overlap
+    int mid = (ss + se) / 2;
+    return Math.min(getMin(st, ss, mid, qs, qe, 2 * si + 1),
+                    getMin(st, mid + 1, se, qs, qe, 2 * si + 2));
+
+}   
+    // Updates the value at arr[index] to 'value' and updates the segTree accordingly.
+    // Uses the prebuilt segTree where each node stores [min, max].
+    // Segment tree indexing:
+    // - For a node at idx, left child is at 2*idx + 1, right child at 2*idx + 2.
+    public void updateValue(int[] arr, int index, int value, int[][] segTree) {
+
+        
+        // code here
+        arr[index]=value;
+        updateMax(segTree,0,arr.length-1,index,value,0);
+        updateMin(segTree,0,arr.length-1,index,value,0);
+        
+    }
+    public void updateMax(int st[][], int ss, int se, int index, int value, int si) {
+        if (index < ss || index > se) {
+            return; // Out of bounds
+        }
+        if (ss == se) {
+            st[si][1] = value; // Update leaf node
+            return;
+        }
+        int mid = (ss + se) / 2;
+        updateMax(st, ss, mid, index, value, 2 * si + 1);
+        updateMax(st, mid + 1, se, index, value, 2 * si + 2);
+        st[si][1] = Math.max(st[2 * si + 1][1], st[2 * si + 2][1]); // Update internal node
+    }
+    
+   public void updateMin(int st[][], int ss, int se, int index, int value, int si) {
+        if (index < ss || index > se) {
+            return; // Out of bounds
+        }
+        if (ss == se) {
+            st[si][0] = value; // Update leaf node
+            return;
+        }
+        int mid = (ss + se) / 2;
+        updateMin(st, ss, mid, index, value, 2 * si + 1);
+        updateMin(st, mid + 1, se, index, value, 2 * si + 2);
+        st[si][0] = Math.min(st[2 * si + 1][0], st[2 * si + 2][0]); // Update internal node
+    }
+
+};

@@ -1,0 +1,56 @@
+//creation
+
+class Main{
+    public static void main(String[] args) {
+        int arr[] = {1, 3, 5, 7, 9, 11};
+        int n = arr.length;
+        int st[] = new int[4 * n];  //the size is 4*n because in worst case the segment tree can have 4*n nodes as 
+        buildSTMin(arr, st, 0, n - 1, 0);
+        for (int i = 0; i < st.length; i++) {
+            System.out.print(st[i] + " ");
+        }
+    }
+
+    public static void buildSTMin(int arr[], int st[], int ss, int se, int si) {
+        if (ss == se) {
+            st[si] = arr[ss];
+            return;
+        }
+        int mid = (ss + se) / 2;
+        buildSTMin(arr, st, ss, mid, si * 2 + 1);
+        buildSTMin(arr, st, mid + 1, se, si * 2 + 2);
+        st[si] = Math.min(st[si * 2 + 1], st[si * 2 + 2]);
+    }
+}
+
+
+
+//query
+public static int getMin(int st[], int ss, int se, int qs, int qe, int si) {
+    if (qs > se || qe < ss) {
+        return Integer.MAX_VALUE; // No overlap //infinity so that we compare with min and it will not affect the result and other will be chosen
+
+    }
+    if (qs <= ss && qe >= se) {
+        return st[si]; // Total overlap
+    } //partial overlap
+    int mid = (ss + se) / 2;
+    return Math.min(getMin(st, ss, mid, qs, qe, 2 * si + 1),
+                    getMin(st, mid + 1, se, qs, qe, 2 * si + 2));
+
+}   
+
+//update
+public static void updateMin(int st[], int ss, int se, int index, int value, int si) {
+    if (index < ss || index > se) {
+        return; // Out of bounds
+    }
+    if (ss == se) {
+        st[si] = value; // Update leaf node
+        return;
+    }
+    int mid = (ss + se) / 2;
+    updateMin(st, ss, mid, index, value, 2 * si + 1);
+    updateMin(st, mid + 1, se, index, value, 2 * si + 2);
+    st[si] = Math.min(st[2 * si + 1], st[2 * si + 2]); // Update internal node
+}
