@@ -1,0 +1,94 @@
+//lazy propogate down
+//this is a range update and range query segment tree
+
+
+//range update +value to a range [l,r]
+//steps:
+
+//1. if the current node is completely inside the update range, then update the current node and mark its children for lazy update(propogate down)
+//2. if the current node is completely outside the update range, then return
+//3. if the current node is partially inside and partially outside the update range,  then recursively call the update function for its left and right children and update the current node value based on the values of its children
+
+//note in 3rd step we only update to ourself and propogate to down only to children not or neeche bcz we are lazy and they will change when they wanted to so now we add this in pending or lazy array and when we will call the update function for that child then we will check if there is any pending update for that child and if there is then we will update that child and propogate down to its children and then we will update the current node value based on the values of its children
+
+class SegmentTree {
+    int st[];
+    int lazy[];
+    int n;
+    public SegmentTree(int arr[]) {
+        n = arr.length;
+        st = new int[4 * n];
+        lazy = new int[4 * n];
+        build(arr, 0, n - 1, 0);
+    }
+    void build(int arr[], int ss, int se, int si) {
+        if (ss == se) {
+            st[si] = arr[ss];
+            return;
+        }
+        int mid = ss + (se - ss) / 2;
+        build(arr, ss, mid, 2 * si + 1);
+        build(arr, mid + 1, se, 2 * si + 2);
+        st[si] = st[2 * si + 1] + st[2 * si + 2];
+    }
+    void updateRange(int l, int r, int val) {
+        updateRangeUtil(0, n - 1, l, r, val, 0);
+    }
+    void updateRangeUtil(int ss, int se, int l, int r, int val, int si) {
+        //if there is any pending update for this node then first update it and propogate down to its children
+        if (lazy[si] != 0) {
+            st[si] += (se - ss + 1) * lazy[si];
+            if (ss != se) {
+                lazy[2 * si + 1] += lazy[si];
+                lazy[2 * si + 2] +=  lazy[si];
+            }
+            lazy[si] = 0;
+        }
+        //if current node is completely outside the update range, return
+        if (ss > r || se < l) {
+            return;
+        }
+        //if current node is completely inside the update range, update it and mark its children for lazy update
+        if (ss >= l && se <= r) {
+            st[si] += (se - ss + 1) * val;
+            if (ss != se) {
+                lazy[2 * si + 1] += val;
+                lazy[2 * si + 2] += val;
+            }
+            return;
+        }
+        //if current node is partially inside and partially outside the update range, recursively call the update function for its left and right children
+        int mid = ss + (se - ss) / 2;
+        updateRangeUtil(ss, mid, l, r, val, 2 * si + 1);
+        updateRangeUtil(mid + 1, se, l, r, val, 2 * si + 2);
+        st[si] = st[2 * si + 1] + st[2 * si + 2];
+    
+    }
+    int queryRange(int l, int r) {
+        return queryRangeUtil(0, n - 1, l, r, 0);
+    }
+    int queryRangeUtil(int ss, int se, int l, int r, int si) {
+        //if there is any pending update for this node then first update it and propogate down to its children
+        if (lazy[si] != 0) {
+            st[si] += (se - ss + 1) * lazy[si];
+            if (ss != se) {
+                lazy[2 * si + 1] += lazy[si];
+                lazy[2 * si + 2] += lazy[si];
+            }
+            lazy[si] = 0;
+        }
+        //if current node is completely outside the query range, return 0
+        if (ss > r || se < l) {
+            return 0;
+        }
+        //if current node is completely inside the query range, return its value
+        if (ss >= l && se <= r) {
+            return st[si];
+        }
+        //if current node is partially inside and partially outside the query range, recursively call the query function for its left and right children
+        int mid = ss + (se - ss) / 2;
+        int leftSum = queryRangeUtil(ss, mid, l, r, 2 * si + 1);
+        int rightSum = queryRangeUtil(mid + 1, se, l, r, 2 * si + 2);
+        return leftSum + rightSum;
+    }
+}
