@@ -28,7 +28,7 @@ class NumArray {
     }
     
     public int sumRange(int left, int right) {
-        return sumRanges(left,right,0,ori.length-1,0);
+        return sumRanges0(left,right,0,ori.length-1,0);
     }
     public int sumRanges(int qi,int qj,int si,int sj,int index){
         if(qi>sj || qj<si){

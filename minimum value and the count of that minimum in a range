@@ -1,0 +1,76 @@
+class Node {
+    int minVal;
+    int count;
+
+    Node(int minVal, int count) {
+        this.minVal = minVal;
+        this.count = count;
+    }
+}
+
+class SegmentTree {
+    Node[] tree;
+    int n;
+
+    public SegmentTree(int[] arr) {
+        this.n = arr.length;
+        tree = new Node[4 * n];
+        build(arr, 0, n - 1, 0);
+    }
+
+    // Merge logic is the key "Software Solution" here
+    private Node merge(Node left, Node right) {
+        if (left.minVal < right.minVal) return new Node(left.minVal, left.count);
+        if (right.minVal < left.minVal) return new Node(right.minVal, right.count);
+        return new Node(left.minVal, left.count + right.count);
+    }
+
+    private void build(int[] arr, int ss, int se, int si) {
+        if (ss == se) {
+            tree[si] = new Node(arr[ss], 1);
+            return;
+        }
+        int mid = ss + (se - ss) / 2;
+        build(arr, ss, mid, 2 * si + 1);
+        build(arr, mid + 1, se, 2 * si + 2);
+        tree[si] = merge(tree[2 * si + 1], tree[2 * si + 2]);
+    }
+
+    public Node query(int l, int r) {
+        return queryUtil(0, n - 1, l, r, 0);
+    }
+
+    private Node queryUtil(int ss, int se, int l, int r, int si) {
+        if (ss > r || se < l) return new Node(Integer.MAX_VALUE, 0);
+        if (ss >= l && se <= r) return tree[si];
+
+        int mid = ss + (se - ss) / 2;
+        Node left = queryUtil(ss, mid, l, r, 2 * si + 1);
+        Node right = queryUtil(mid + 1, se, l, r, 2 * si + 2);
+        return merge(left, right);
+    }
+    // Public method to update value at a specific index
+    public void update(int idx, int newVal) {
+        updateUtil(0, n - 1, idx, newVal, 0);
+    }
+
+    private void updateUtil(int ss, int se, int idx, int newVal, int si) {
+        // Base case: If we reach the leaf node for the specific index
+        if (ss == se) {
+            tree[si] = new Node(newVal, 1);
+            return;
+        }
+
+        int mid = ss + (se - ss) / 2;
+        
+        // Decide which half the index belongs to
+        if (idx <= mid) {
+            updateUtil(ss, mid, idx, newVal, 2 * si + 1);
+        } else {
+            updateUtil(mid + 1, se, idx, newVal, 2 * si + 2);
+        }
+
+        // Re-merge parents to update minimum and count on the way up
+        tree[si] = merge(tree[2 * si + 1], tree[2 * si + 2]);
+    }
+}

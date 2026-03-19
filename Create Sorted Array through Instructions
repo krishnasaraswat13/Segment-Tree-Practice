@@ -1,0 +1,56 @@
+class Solution {
+    int[] tree;
+    int MOD = 1000000007;
+
+    public int createSortedArray(int[] instructions) {
+        // 1. Coordinate Compression
+        TreeSet<Integer> set = new TreeSet<>();
+        for (int num : instructions) set.add(num);
+        Map<Integer, Integer> rankMap = new HashMap<>();
+        int rank = 0;
+        for (int num : set) rankMap.put(num, rank++);
+
+        int m = rankMap.size();
+        tree = new int[4 * m];
+        long totalCost = 0;
+
+        for (int i = 0; i < instructions.length; i++) {
+            int currentRank = rankMap.get(instructions[i]);
+            
+            // Cost is min(strictly less, strictly greater)
+            // Query strictly less: range [0, currentRank - 1]
+            int strictlyLess = query(0, 0, m - 1, 0, currentRank - 1);
+            
+            // Query less than or equal: range [0, currentRank]
+            int lessOrEqual = query(0, 0, m - 1, 0, currentRank);
+            
+            // Strictly greater = (total elements inserted so far) - (elements <= current)
+            int strictlyGreater = i - lessOrEqual;
+            
+            totalCost = (totalCost + Math.min(strictlyLess, strictlyGreater)) % MOD;
+            
+            // Update tree with the current element after calculating cost
+            update(0, 0, m - 1, currentRank, 1);
+        }
+
+        return (int) totalCost;
+    }
+
+    private void update(int node, int start, int end, int idx, int val) {
+        if (start == end) {
+            tree[node] += val;
+            return;
+        }
+        int mid = start + (end - start) / 2;
+        if (idx <= mid) update(2 * node + 1, start, mid, idx, val);
+        else update(2 * node + 2, mid + 1, end, idx, val);
+        tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
+    }
+
+    private int query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) return 0;
+        if (l <= start && end <= r) return tree[node];
+        int mid = start + (end - start) / 2;
+        return query(2 * node + 1, start, mid, l, r) + query(2 * node + 2, mid + 1, end, l, r);
+    }
+}

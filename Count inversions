@@ -1,0 +1,76 @@
+//In this we are given a permutation of 1 to n and we have to count the number of inversions in the array. An inversion is a pair of indices (i, j) such that i < j and arr[i] > arr[j].
+//We can solve this problem using a segment tree. We will build a segment tree of size n and for each element in the array we will query the segment tree for the number of elements greater than the current element and then we will update the segment tree to mark the current element as visited.
+
+//example
+n=5
+arr=[2, 3, 8, 6, 1]
+ans=[0, 0, 0, 1, 4]
+
+
+
+class SegmentTree {
+    int[] tree;
+    int n;
+
+    public SegmentTree(int size) {
+        this.n = size;
+        tree = new int[4 * n];
+    }
+
+    public void update(int idx) {
+        updateUtil(0, n - 1, idx, 0);
+    }
+
+    private void updateUtil(int ss, int se, int idx, int si) {
+        if (ss == se) {
+            tree[si] = 1; // Mark this index as visited
+            return;
+        }
+        int mid = ss + (se - ss) / 2;
+        if (idx <= mid) updateUtil(ss, mid, idx, 2 * si + 1);
+        else updateUtil(mid + 1, se, idx, 2 * si + 2);
+        tree[si] = tree[2 * si + 1] + tree[2 * si + 2];
+    }
+
+    public int query(int l, int r) {
+        return queryUtil(0, n - 1, l, r, 0);
+    }
+
+    private int queryUtil(int ss, int se, int l, int r, int si) {
+        if (r < ss || se < l) return 0; // No overlap
+        if (l <= ss && se <= r) return tree[si]; // Total overlap
+        int mid = ss + (se - ss) / 2;
+        return queryUtil(ss, mid, l, r, 2 * si + 1) + queryUtil(mid + 1, se, l, r, 2 * si + 2); // Partial overlap
+        }
+}
+class Solution {
+    public int[] countInversions(int[] arr) {
+        int n = arr.length;
+        SegmentTree st = new SegmentTree(n);
+        int inversions[]= new int[n];
+        for (int i = 0; i < n; i++) {
+            inversions[i] = st.query(arr[i], n - 1); // Count elements greater than arr[i]
+            st.update(arr[i] - 1); // Mark arr[i] as visited (0-based index)
+        }
+        return inversions;
+    }
+}
+
+//dry run
+n=5
+arr=[2, 3, 8, 6, 1]
+i=0
+inversions[0]=st.query(2,4)=0
+st.update(1) //mark 2 as visited
+i=1
+inversions[1]=st.query(3,4)=0
+st.update(2) //mark 3 as visited
+i=2
+inversions[2]=st.query(8,4)=0
+st.update(7) //mark 8 as visited
+i=3
+inversions[3]=st.query(6,4)=1 //6 is greater than 1 and 2 and 3 but 8 is not greater than 6
+st.update(5) //mark 6 as visited
+i=4
+inversions[4]=st.query(1,4)=4 //1 is greater than 2 and 3 and 6 and 8
+st.update(0) //mark 1 as visited

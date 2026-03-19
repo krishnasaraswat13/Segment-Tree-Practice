@@ -1,0 +1,103 @@
+//without st
+import java.util.*;
+
+class Solution {
+    public List<Integer> fallingSquares(int[][] positions) {
+        int n = positions.length;
+        int[] heights = new int[n];
+        
+        for (int i = 0; i < n; i++) {
+            int left = positions[i][0];
+            int size = positions[i][1];
+            int right = left + size;
+            heights[i] += size;
+            
+            // Check all previous squares for overlap
+            for (int j = 0; j < i; j++) {
+                int pLeft = positions[j][0];
+                int pSize = positions[j][1];
+                int pRight = pLeft + pSize;
+                
+                // Standard interval overlap check: [L1, R1) and [L2, R2)
+                if (left < pRight && right > pLeft) {
+                    heights[i] = Math.max(heights[i], heights[j] + size);
+                }
+            }
+        }
+        
+        // Transform into "running maximum" as required by the problem
+        List<Integer> ans = new ArrayList<>();
+        int curMax = 0;
+        for (int h : heights) {
+            curMax = Math.max(curMax, h);
+            ans.add(curMax);
+        }
+        return ans;
+    }
+}
+
+//
+import java.util.*;
+
+class Solution {
+    int[] tree;
+    int m;
+
+    public List<Integer> fallingSquares(int[][] positions) {
+        // 1. Coordinate Compression
+        TreeSet<Integer> coords = new TreeSet<>();
+        for (int[] p : positions) {
+            coords.add(p[0]);
+            coords.add(p[0] + p[1] - 1);
+        }
+        
+        List<Integer> sortedCoords = new ArrayList<>(coords);
+        Map<Integer, Integer> rankMap = new HashMap<>();
+        for (int i = 0; i < sortedCoords.size(); i++) rankMap.put(sortedCoords.get(i), i);
+        
+        m = sortedCoords.size();
+        tree = new int[4 * m];
+        List<Integer> result = new ArrayList<>();
+        int globalMax = 0;
+
+        for (int[] p : positions) {
+            int L = rankMap.get(p[0]);
+            int R = rankMap.get(p[0] + p[1] - 1);
+            int height = p[1];
+
+            // Step 1: Query max height currently in [L, R]
+            int currentMax = query(1, 0, m - 1, L, R);
+            int newHeight = currentMax + height;
+
+            // Step 2: Update all points in range [L, R] to newHeight
+            // Note: In a true ST without lazy prop, we update points individually
+            for (int i = L; i <= R; i++) {
+                update(1, 0, m - 1, i, newHeight);
+            }
+
+            globalMax = Math.max(globalMax, newHeight);
+            result.add(globalMax);
+        }
+        return result;
+    }
+
+    private void update(int node, int start, int end, int idx, int val) {
+        if (start == end) {
+            // We only update if the new square is taller than what's there
+            tree[node] = Math.max(tree[node], val);
+            return;
+        }
+        int mid = (start + end) / 2;
+        if (idx <= mid) update(2 * node + 1, start, mid, idx, val);
+        else update(2 * node + 2, mid + 1, end, idx, val);
+        tree[node] = Math.max(tree[2 * node + 1], tree[2 * node + 2]);
+    }
+
+    private int query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) return 0;
+        if (l <= start && end <= r) return tree[node];
+        int mid = (start + end) / 2;
+        return Math.max(query(2 * node + 1, start, mid, l, r),
+                        query(2 * node + 2, mid + 1, end, l, r));
+    }
+}

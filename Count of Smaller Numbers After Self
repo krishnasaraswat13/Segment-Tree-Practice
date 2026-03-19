@@ -1,0 +1,118 @@
+class Solution {
+   //i'll likely encounter this problem solved using Merge Sort. While the Segment Tree/BIT approach is excellent, the Merge Sort method is a "must-know" for interviews
+    int[] count;
+
+    public List<Integer> countSmaller(int[] nums) {
+        int n = nums.length;
+        count = new int[n];
+        int[] indices = new int[n];
+        for (int i = 0; i < n; i++) indices[i] = i;
+
+        mergeSort(nums, indices, 0, n - 1);
+
+        List<Integer> res = new ArrayList<>();
+        for (int c : count) res.add(c);
+        return res;
+    }
+
+    private void mergeSort(int[] nums, int[] indices, int left, int right) {
+        if (left >= right) return;
+        int mid = left + (right - left) / 2;
+        mergeSort(nums, indices, left, mid);
+        mergeSort(nums, indices, mid + 1, right);
+        merge(nums, indices, left, mid, right);
+    }
+
+    private void merge(int[] nums, int[] indices, int left, int mid, int right) {
+        int[] temp = new int[right - left + 1];
+        int i = left;      // Pointer for left half
+        int j = mid + 1;   // Pointer for right half
+        int k = 0;
+        int rightSmallerCount = 0;
+
+        while (i <= mid && j <= right) {
+            if (nums[indices[j]] < nums[indices[i]]) {
+                // Element on the right is smaller
+                temp[k] = indices[j];
+                rightSmallerCount++; // Increment count of smaller elements seen on right
+                j++;
+            } else {
+                // Element on the left is smaller or equal
+                // Add the count of all smaller elements found in the right half so far
+                count[indices[i]] += rightSmallerCount;
+                temp[k] = indices[i];
+                i++;
+            }
+            k++;
+        }
+
+        // Clean up remaining elements
+        while (i <= mid) {
+            count[indices[i]] += rightSmallerCount;
+            temp[k++] = indices[i++];
+        }
+        while (j <= right) {
+            temp[k++] = indices[j++];
+        }
+
+        // Copy back to original indices array
+        for (int p = 0; p < temp.length; p++) {
+            indices[left + p] = temp[p];
+        }
+    }
+}
+
+///
+/// using st
+/// 
+import java.util.*;
+
+public class Solution {
+    int[] tree;
+    int n;
+
+    public List<Integer> countSmaller(int[] nums) {
+        if (nums == null || nums.length == 0) return new ArrayList<>();
+        
+        // 1. Coordinate Compression
+        TreeSet<Integer> set = new TreeSet<>();
+        for (int num : nums) set.add(num);
+        Map<Integer, Integer> rankMap = new HashMap<>();
+        int rank = 0;
+        for (int num : set) rankMap.put(num, rank++);
+
+        int m = rankMap.size();
+        tree = new int[4 * m];
+        Integer[] result = new Integer[nums.length];
+
+        // 2. Traverse from Right to Left
+        for (int i = nums.length - 1; i >= 0; i--) {
+            int currentRank = rankMap.get(nums[i]);
+            // Query sum of frequencies for ranks [0, currentRank - 1]
+            result[i] = query(0, 0, m - 1, 0, currentRank - 1);
+            // Update frequency of currentRank by +1
+            update(0, 0, m - 1, currentRank, 1);
+        }
+
+        return Arrays.asList(result);
+    }
+
+    private void update(int node, int start, int end, int idx, int val) {
+        if (start == end) {
+            tree[node] += val;
+            return;
+        }
+        int mid = (start + end) / 2;
+        if (idx <= mid) update(2 * node + 1, start, mid, idx, val);
+        else update(2 * node + 2, mid + 1, end, idx, val);
+        tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
+    }
+
+    private int query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) return 0;
+        if (l <= start && end <= r) return tree[node];
+        int mid = (start + end) / 2;
+        return query(2 * node + 1, start, mid, l, r) + query(2 * node + 2, mid + 1, end, l, r);
+    }
+}
+    
