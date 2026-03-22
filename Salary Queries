@@ -1,0 +1,103 @@
+
+// 💡 𝐏𝐫𝐨𝐛𝐥𝐞𝐦 𝐬𝐮𝐦𝐦𝐚𝐫𝐲:⁣
+// We are given n employees, each with a salary. We need to efficiently process two types of queries:⁣
+// ⁣
+// ! k x → update the salary of employee k to x⁣
+// ? a b → count how many employees have salaries in the range [a, b]⁣
+// ⁣
+// Since salaries can be as large as 10^9, we apply coordinate compression and then use a Segment Tree to support:⁣
+// ⁣
+// Point updates (when salaries change)⁣
+// Range queries (count employees with salaries in a given range)⁣
+// ⁣
+// 🔑 𝐖𝐡𝐚𝐭 𝐲𝐨𝐮’𝐥𝐥 𝐥𝐞𝐚𝐫𝐧 𝐢𝐧 𝐭𝐡𝐢𝐬 𝐯𝐢𝐝𝐞𝐨:⁣
+// ⁣
+// How to combine 𝐜𝐨𝐨𝐫𝐝𝐢𝐧𝐚𝐭𝐞 𝐜𝐨𝐦𝐩𝐫𝐞𝐬𝐬𝐢𝐨𝐧 𝐰𝐢𝐭𝐡 𝐒𝐞𝐠𝐦𝐞𝐧𝐭 𝐓𝐫𝐞𝐞𝐬⁣
+// Implementing point updates and range sum queries⁣
+// Handling dynamic queries efficiently in O(log n)⁣
+// ⁣
+import java.util.*;
+class SegmentTree {
+    private int[] tree;
+    private int size;
+
+    public SegmentTree(int n) {
+        size = n;
+        tree = new int[4 * n];
+    }
+
+    public void update(int index, int value) {
+        update(0, 0, size - 1, index, value);
+    }
+
+    private void update(int node, int start, int end, int index, int value) {
+        if (start == end) {
+            tree[node] += value; // Increment the count for this salary
+            return;
+        }
+        int mid = (start + end) / 2;
+        if (index <= mid) {
+            update(2 * node + 1, start, mid, index, value);
+        } else {
+            update(2 * node + 2, mid + 1, end, index, value);
+        }
+        tree[node] = tree[2 * node + 1] + tree[2 * node + 2]; // Update the count for the current node
+    }
+
+    public int query(int left, int right) {
+        return query(0, 0, size - 1, left, right);
+    }
+
+    private int query(int node, int start, int end, int left, int right) {
+        if (right < start || end < left) {
+            return 0; // No overlap
+        }
+        if (left <= start && end <= right) {
+            return tree[node]; // Total overlap
+        }
+        int mid = (start + end) / 2;
+        return query(2 * node + 1, start, mid, left, right) +
+               query(2 * node + 2, mid + 1, end, left, right); // Partial overlap
+    }
+    public static void main(String[] args) {
+        // Example usage
+        int n = 5; // Number of employees
+        SegmentTree segmentTree = new SegmentTree(n);
+
+        // Initial salaries (after coordinate compression)
+        int[] salaries = {1000, 2000, 3000, 4000, 5000};
+         //coordinate compression
+        Set<Integer> uniqueSalaries = new HashSet<>();
+        for (int salary : salaries) {
+            uniqueSalaries.add(salary);
+        }
+
+        //if we have queries that can introduce new salaries, we should also add those to the uniqueSalaries set before sorting and indexing
+        // For example, if we have a query to add a new salary:
+        uniqueSalaries.add(6000); // Adding a new salary from a query
+        //we will run this for all queries that can introduce new salaries before we do the coordinate compression
+
+        List<Integer> sortedSalaries = new ArrayList<>(uniqueSalaries);
+        Collections.sort(sortedSalaries);
+        Map<Integer, Integer> salaryToIndex = new HashMap<>();
+        for (int i = 0; i < sortedSalaries.size(); i++) {
+            salaryToIndex.put(sortedSalaries.get(i), i);
+        }
+        //THERE ARE TWO TYPES OF QUERIES:
+        //1. Update query: k x → update the salary of employee k to x
+        //2. Range query: a b → count how many employees have salaries in the range [a, b]
+        // Example queries
+      //FIRST WE NEED TO DECREASE THE COUNT OF THE OLD SALARY BEFORE INCREASING THE COUNT OF THE NEW SALARY
+        // Update: Employee 1's salary changes from 1000 to 1500
+        segmentTree.update(salaryToIndex.get(1000), -1); // Decrease count for old salary
+        segmentTree.update(salaryToIndex.get(1500), 1); // Increase count for new salary
+
+        // Query: How many employees have salaries in the range [1500, 4500]?
+        int leftIndex = salaryToIndex.get(1500); // Get the index for salary 1500
+        int rightIndex = salaryToIndex.get(4500); // Get the index for salary 4500
+        int result = segmentTree.query(leftIndex, rightIndex);
+        System.out.println("Number of employees with salaries in the range [1500, 4500]: " + result);
+
+    }
+}
+       

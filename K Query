@@ -1,0 +1,65 @@
+//find in the given range ha=ow many elements are greater than k'
+//for this we are using the concept of segment tree of arraylist
+// we will build a segment tree where each node will store a sorted list of the elements in that segment
+// to answer the query we will use binary search on the sorted list of the node to find how many elements are greater than k
+//this is the upper bound of the query 
+// Time complexity: O(n log n) for building the tree and O(log^2 n) for each query
+
+class Main{
+    public static void main(String[] args) {
+        int[] arr = {1, 5, 2, 4, 3};
+        SegmentTree st = new SegmentTree(arr);
+        System.out.println(st.query(1, 3, 2)); // Output: 2 (5 and 4 are greater than 2)
+        System.out.println(st.query(0, 4, 3)); // Output: 3 (5, 4, and 3 are greater than 3)
+    }
+    public static class SegmentTree {
+        private List<Integer>[] tree;
+        private int size;
+        public SegmentTree(int[] arr) {
+            size = arr.length;
+            tree = new List[4 * size];
+            build(arr, 0, 0, size - 1);
+        }   
+        private void build(int[] arr, int node, int start, int end) {
+            tree[node] = new ArrayList<>();
+            if (start == end) {
+                tree[node].add(arr[start]);
+            } else {    
+                int mid = (start + end) / 2;
+                build(arr, 2 * node + 1, start, mid);
+                build(arr, 2 * node + 2, mid + 1, end);
+                tree[node].addAll(tree[2 * node + 1]);
+                tree[node].addAll(tree[2 * node + 2]);
+                Collections.sort(tree[node]);   
+            }
+        }
+        public int query(int l, int r, int k) {
+            return query(0, 0, size - 1, l, r, k);
+        }
+        private int query(int node, int start, int end, int l, int r, int k) {
+            if (r < start || end < l) {
+                return 0;
+            }
+            if (l <= start && end <= r) {
+                return tree[node].size() - upperBound(tree[node], k);
+            }
+            int mid = (start + end) / 2;
+            int leftQuery = query(2 * node + 1, start, mid, l, r, k);
+            int rightQuery = query(2 * node + 2, mid + 1, end, l, r, k);
+            return leftQuery + rightQuery;
+        }
+        private int upperBound(List<Integer> list, int k) {
+            int low = 0, high = list.size();
+            while (low < high) {
+                int mid = (low + high) / 2;
+                if (list.get(mid) <= k) {
+                    low = mid + 1;  
+                } else {
+                    high = mid;  
+                }
+            }
+            return low;
+        }
+    }   
+        
+}

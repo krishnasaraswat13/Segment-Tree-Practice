@@ -23,7 +23,7 @@ class NumArray {
         if (start != end) {
             int mid = start + (end - start) / 2;
             updateutil(2*si+1,start, mid, index, diff);
-            updateutil(2*si+2,mid + 1, end, index, diff);
+           updateutil(2*si+2,mid + 1, end, index, diff);
         }
     }
     

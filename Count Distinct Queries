@@ -1,0 +1,68 @@
+//in this we have to return the count of distinct characters in the given range. We can use a segment tree to store the count of distinct characters for each segment of the array. Each node in the segment tree will store a set of characters that are present in that segment. When we query for a range, we can combine the sets from the relevant nodes to get the count of distinct characters in that range.
+// Time complexity: O(n log n) for building the tree and O(log n) for
+// each query
+import java.util.*;
+class Main{
+    public static void main(String[] args) {
+        String s = "abcabc";
+        SegmentTree st = new SegmentTree(s);
+        System.out.println(st.query(0, 2)); // Output: 3 (a, b, c)
+        System.out.println(st.query(3, 5)); // Output: 3 (a, b, c)
+        System.out.println(st.query(0, 5)); // Output: 3 (a, b, c)
+    }
+    public static class SegmentTree {
+        private Set<Character>[] tree;
+        private int size;
+        public SegmentTree(String s) {
+            size = s.length();
+            tree = new Set[4 * size];
+            build(s, 0, 0, size - 1);
+        }   
+        private void build(String s, int node, int start, int end) {
+            tree[node] = new HashSet<>();
+            if (start == end) {
+                tree[node].add(s.charAt(start));
+            } else {    
+                int mid = (start + end) / 2;
+                build(s, 2 * node + 1, start, mid);
+                build(s, 2 * node + 2, mid + 1, end);
+                tree[node].addAll(tree[2 * node + 1]);
+                tree[node].addAll(tree[2 * node + 2]);
+            }
+        }
+        public int query(int l, int r) {
+            return query(0, 0, size - 1, l, r).size();
+        }
+        private Set<Character> query(int node, int start, int end, int l, int r) {
+            if (r < start || end < l) {
+                return new HashSet<>(); // Return empty set for no overlap
+            }
+            if (l <= start && end <= r) {
+                return tree[node]; // Total overlap
+            }
+            int mid = (start + end) / 2;
+            Set<Character> leftQuery = query(2 * node + 1, start, mid, l, r);
+            Set<Character> rightQuery = query(2 * node + 2, mid + 1, end, l, r);
+            leftQuery.addAll(rightQuery); // Combine results
+            return leftQuery;
+        }
+        public void update(int index, char value) {
+            update(0, 0, size - 1, index, value);
+        }
+        private void update(int node, int start, int end, int index, char value) {
+            if (index < start || index > end) {
+                return; // Out of bounds
+            }
+            if (start == end) {
+                tree[node].clear(); // Clear the old character
+                tree[node].add(value); // Add the new character
+                return;
+            }
+            int mid = (start + end) / 2;
+            update(2 * node + 1, start, mid, index, value);
+            update(2 * node + 2, mid + 1, end, index, value);
+            tree[node].clear();
+            tree[node].addAll(tree[2 * node + 1]);
+            tree[node].addAll(tree[2 * node + 2]);
+        }
+    }
