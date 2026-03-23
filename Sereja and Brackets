@@ -1,0 +1,78 @@
+//In this we are given a sequence of opening and closing brackets and we have to find the length of the longest regular bracket sequence in a given range
+//means no of pairs of brackets in the given range
+// we can use a segment tree to store the number of opening and closing brackets in each segment of the array. Each node in the segment tree will store the number of opening and closing brackets in that segment. When we query for a range, we can combine the results from the relevant nodes to get the number of opening and closing brackets in that range and then calculate the length of the longest regular bracket sequence.
+// Time complexity: O(n log n) for building the tree and O(log n) for each query
+class Main{
+    public class Node{
+        int open; // number of opening brackets
+        int close; // number of closing brackets
+        int pairs; // number of pairs of brackets
+        public Node(int pairs,int open, int close) {
+            this.open = open;
+            this.close = close;
+            this.pairs = pairs; // these are the already formed pairs in the segment
+        }
+    }
+    public static void main(String[] args) {
+        String s = "(()())";
+        SegmentTree st = new SegmentTree(s); 
+        System.out.println(st.query(0, 5).pairs*2); // Output: 6 (the entire string is a regular bracket sequence) //*2 bcz we need to count both opening and closing brackets and length of the longest regular bracket sequence is equal to the number of pairs multiplied by 2
+        System.out.println(st.query(1, 4).pairs*2); // Output: 4 (the substring "()()")
+    }
+    public static class SegmentTree {
+        private Node[] tree;
+        private int size;
+        public SegmentTree(String s) {
+            size = s.length();
+            tree = new Node[4 * size];
+            build(s, 0, 0, size - 1);
+        }   
+        private void build(String s, int node, int start, int end) {
+            if (start == end) {
+                tree[node] = s.charAt(start) == '(' ? new Node(0, 1, 0) : new Node(0, 0, 1); //leaf node where we have either an opening or a closing bracket
+                return;
+            }
+            int mid = (start + end) / 2;
+            build(s, 2 * node + 1, start, mid);
+            build(s, 2 * node + 2, mid + 1, end);
+            tree[node] = merge(tree[2 * node + 1], tree[2 * node + 2]); // Store the minimum value to find the number of pairs
+        }
+        public Node query(int l, int r) {
+            return query(0, 0, size - 1, l, r);
+        }
+        private Node query(int node, int start, int end, int l, int r) {
+            if (r < start || end < l) {
+                return new Node(0, 0, 0); // No overlap
+            }
+            if (l <= start && end <= r) {
+                return tree[node]; // Total overlap
+            }
+            int mid = (start + end) / 2;
+            int leftQuery = query(2 * node + 1, start, mid, l, r);
+            int rightQuery = query(2 * node + 2, mid + 1, end, l, r);
+            return merge(leftQuery, rightQuery); // Combine results
+        }
+        private static Node merge(Node left, Node right) {
+            int open = left.open + right.open - Math.min(left.open, right.close); // Calculate the number of opening brackets that are not paired
+            int close = left.close + right.close - Math.min(left.open, right.close); // Calculate the number of closing brackets that are not paired
+            int pairs = left.pairs + right.pairs + Math.min(left.close, right.open);
+            return new Node(pairs, open, close);
+        }
+        public void update(int index, char value) {
+            update(0, 0, size - 1, index, value);
+        }
+        private void update(int node, int start, int end, int index, char value) {
+            if (index < start || index > end) {
+                return; // Out of bounds
+            }
+            if (start == end) {
+                tree[node] = value == '(' ? new Node(0, 1, 0) : new Node(0, 0, 1); // Update leaf node
+                return;
+            }
+            int mid = (start + end) / 2;
+            update(2 * node + 1, start, mid, index, value);
+            update(2 * node + 2, mid + 1, end, index, value);
+            tree[node] = merge(tree[2 * node + 1], tree[2 * node + 2]); // Update internal node
+        }   
+    }
+}

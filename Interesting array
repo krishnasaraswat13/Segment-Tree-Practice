@@ -1,0 +1,140 @@
+//In this ques we are given a l,r and q  in which we have to construct an array whose form l to r elements ka & will be q 
+//so the approach is that ki we need to find the set bits in q  ans we will check for every bit of q  we will construct a prefix 
+
+//Example Walkthrough 
+// (Bit 0 and Bit 1):Imagine we have two constraints:
+// Range [1, 2] must have AND = 3 (Binary 11)
+// Range [2, 3] must have AND = 1 (Binary 01)
+// For Bit 0 (2^0 = 1):
+// Constraint 1 says [1, 2] needs bit 0.\
+// Constraint 2 says [2, 3] needs bit 0.
+// Indices 1, 2, and 3 all have bit 0 set.
+//  A[1], A[2], A[3] all get +1.For Bit 1 (2^1 = 2):
+// Constraint 1 says [1, 2] needs bit 1.
+// Constraint 2 (Q=1) has a 0 at bit 1, so it tells us nothing.
+// Indices 1 and 2 have bit 1 set.
+//  A[1] and A[2] get +2.
+// Final Result:A[1] = 1 + 2 = 3
+// A[2] = 1 + 2 = 3
+// A[3] = 1 + 0 = 1
+
+//it means we will iterate through all the bits of q and for each bit we will check if it is set or not if it is set then we will add that bit to the prefix array for the range l to r because that bit is required in that range and if it is not set then we will do nothing because that bit is not required in that range and but it should have at least 1 bit unset for 0 so that end of whole range create 0
+//now we will create a prefix sum array in which e will mark if the array bit should be set or not if it is set then we do i++ on that element so that we know that the given query require this bit to be set and will set this bit in whole range but it is very long process to run loop in whole range form l to r so we do smart work by using difference array and prefix sum concept in which if we want to mark whole array +1 then we ony do this in l index and will do -1 on r+1 index so that when we will calculate the prefix sum will weill know that now we have to stop as the -1 arrives 
+example if
+//Let’s say N=5, and we want to set a bit for the range [2, 4].
+//Marking:diff[2] = +1 diff[5] = -1 (This is R+1)
+//Array looks like: [0, 1, 0, 0, -1]
+//Calculating Prefix Sum (Running Total):
+//Pos 1: 0 
+//Pos 2: 0 + 1 = 1  <-- Range Starts
+//Pos 3: 1 + 0 = 1
+//Pos 4: 1 + 0 = 1  <-- Range Ends
+//Pos 5: 1 + (-1) = 0 <-- Back to Zero
+//The result: [0, 1, 1, 1, 0]. Notice how the 1s only exist between L and R.
+//
+//we are using one more concept which is calculating the number on that array index as at the end we know which bit to set then we will do 2 ki power of that bit and then add to the ans continuously until the last bit to get the number on that index
+
+
+//there is also a final check of using segment tree to finf if we generated the correct array or not by storing the and of the range on the segments and at the end of query we check if the elemet of that segment is !=q then return -1 it means array cannot be formed
+
+
+// The logic follows these steps:
+
+// Bitwise Construction: Use a difference array for each of the 30 bits to mark which indices must have that bit set.
+
+// Build Array: If a bit's prefix sum at index i is >0, set that bit in A[i].
+
+// Verification: Build a Segment Tree over A to calculate range AND and ensure every constraint (L,R,Q) is actually satisfied.
+
+
+import java.util.Scanner;
+import java.io.PrintWriter;
+
+public class Main {
+    static int[] A;
+    static int[] tree;
+
+    // Segment Tree to verify Range AND
+    static void build(int node, int start, int end) {
+        if (start == end) {
+            tree[node] = A[start];
+            return;
+        }
+        int mid = (start + end) / 2;
+        build(2 * node, start, mid);
+        build(2 * node + 1, mid + 1, end);
+        tree[node] = tree[2 * node] & tree[2 * node + 1];
+    }
+
+    static int query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) return (1 << 30) - 1; // All 1s is identity for AND
+        if (l <= start && end <= r) return tree[node];
+        int mid = (start + end) / 2;
+        return query(2 * node, start, mid, l, r) & query(2 * node + 1, mid + 1, end, l, r);
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        PrintWriter out = new PrintWriter(System.out);
+
+        if (!sc.hasNextInt()) return;
+        int n = sc.nextInt();
+        int m = sc.nextInt();
+
+        int[][] constraints = new int[m][3];
+        int[][] diff = new int[30][n + 2];
+
+        for (int i = 0; i < m; i++) {
+            int l = sc.nextInt();
+            int r = sc.nextInt();
+            int q = sc.nextInt();
+            constraints[i][0] = l;
+            constraints[i][1] = r;
+            constraints[i][2] = q;
+
+            // Difference Array: Mark bits that MUST be 1
+            for (int k = 0; k < 30; k++) {
+                if (((q >> k) & 1) == 1) {
+                    diff[k][l]++;
+                    diff[k][r + 1]--;
+                }
+            }
+        }
+
+        A = new int[n + 1];
+        for (int k = 0; k < 30; k++) {
+            int count = 0;
+            for (int i = 1; i <= n; i++) {
+                count += diff[k][i];
+                if (count > 0) {
+                    A[i] |= (1 << k); // Set the k-th bit  //this step is same as doing power of 2 and adding to the ans but here we are directly setting the bit in the array index which is more efficient than calculating power of 2 and adding to the ans
+                }
+            }
+        }
+
+        // Verification Step
+        tree = new int[4 * n + 1];
+        build(1, 1, n);
+
+        boolean possible = true;
+        for (int i = 0; i < m; i++) {
+            if (query(1, 1, n, constraints[i][0], constraints[i][1]) != constraints[i][2]) {
+                possible = false;
+                break;
+            }
+        }
+
+        if (possible) {
+            out.println("YES");
+            for (int i = 1; i <= n; i++) {
+                out.print(A[i] + (i == n ? "" : " "));
+            }
+            out.println();
+        } else {
+            out.println("NO");
+        }
+
+        out.flush(); // Crucial to actually print the buffered text
+        sc.close();
+    }
+}
