@@ -1,0 +1,50 @@
+class Solution {
+   
+
+    static int[] tree;
+    static int OFFSET;
+    static int MAX_RANGE;
+
+    static void update(int node, int start, int end, int idx) {
+        if (start == end) {
+            tree[node]++;
+            return;
+        }
+        int mid = (start + end) / 2;
+        if (idx <= mid) update(2 * node, start, mid, idx);
+        else update(2 * node + 1, mid + 1, end, idx);
+        tree[node] = tree[2 * node] + tree[2 * node + 1];
+    }
+
+    static int query(int node, int start, int end, int l, int r) {
+        if (r < start || end < l) return 0;
+        if (l <= start && end <= r) return tree[node];
+        int mid = (start + end) / 2;
+        return query(2 * node, start, mid, l, r) + query(2 * node + 1, mid + 1, end, l, r);
+    }
+
+   
+    public int countMajoritySubarrays(int[] nums, int target) {
+        int n=nums.length;
+        OFFSET = n; 
+        MAX_RANGE = 2 * n; //as we are storing the frequency of element as if value equal to target then we will +1 and if not then we will -1 and in worse case the value lies between -n to +n so we need to shift this all to positive so we take range as 2n and offset as n 
+        tree = new int[4 * (MAX_RANGE + 1)];
+
+        long totalValidSubarrays = 0;
+        int currentPrefixSum = 0;  //if prefix sum>0 it means we have mazority element 
+
+        update(1, 0, MAX_RANGE, 0 + OFFSET);  //Prefix Sum 0 exists before we process any elements
+
+        for (int num : nums) {
+            currentPrefixSum += (num == target ? 1 : -1);
+            // Query: How many previous prefix sums are strictly LESS than current?
+            // Range: [0, (currentPrefixSum - 1) + OFFSET]
+            totalValidSubarrays += query(1, 0, MAX_RANGE, 0, currentPrefixSum + OFFSET - 1);
+        // Update: Add this prefix sum to the frequency tracker
+            update(1, 0, MAX_RANGE, currentPrefixSum + OFFSET);
+        }
+
+        return (int)totalValidSubarrays;
+    }
+}
+   

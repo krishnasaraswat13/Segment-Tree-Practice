@@ -1,0 +1,105 @@
+//Ques description:
+//You are given an array A of size N. You have to perform Q queries on the array. There are two types of queries:
+//1. 1 l r: For each index i in the range [l, r], update A[i] = (i - l + 1) * A[i].
+//2. 2 l r: Find the sum of elements in the range [l, r] and add it to the total sum of all queries of type 2.
+//Since the answer can be large, print the total sum of all queries of type 2 modulo 10^9 + 7.
+
+
+
+import java.util.*;
+
+public class ArrayQueries {
+    private static final long MOD = 1000000007L;
+    private long[] tree;
+    private long[] lazyVal;
+    private int[] lazyL;
+    private boolean[] hasLazy;
+    private long[] prefSumIdx;
+    private int n;
+
+    public ArrayQueries(int[] A) {
+        this.n = A.length;
+        this.tree = new long[4 * n];
+        this.lazyVal = new long[4 * n];
+        this.lazyL = new int[4 * n];
+        this.hasLazy = new boolean[4 * n];
+        this.prefSumIdx = new long[n + 1];
+
+        // Precompute prefix sums of (i + 1) for 0-based indexing
+        for (int i = 0; i < n; i++) {
+            prefSumIdx[i + 1] = (prefSumIdx[i] + (i + 1)) % MOD;
+        }
+        build(A, 1, 0, n - 1);
+    }
+
+    private void build(int[] A, int node, int start, int end) {
+        if (start == end) {
+            tree[node] = A[start] % MOD;
+            return;
+        }
+        int mid = (start + end) / 2;
+        build(A, 2 * node, start, mid);
+        build(A, 2 * node + 1, mid + 1, end);
+        tree[node] = (tree[2 * node] + tree[2 * node + 1]) % MOD;
+    }
+
+    private void push(int node, int start, int end) {
+        if (hasLazy[node]) {
+            int mid = (start + end) / 2;
+            apply(2 * node, start, mid, lazyVal[node], lazyL[node]);
+            apply(2 * node + 1, mid + 1, end, lazyVal[node], lazyL[node]);
+            hasLazy[node] = false;
+        }
+    }
+
+    private void apply(int node, int start, int end, long val, int L) {
+        // Sum of (i - L + 1) from start to end
+        // = Sum(i+1) from start to end - L * (number of elements)
+        long count = (end - start + 1);
+        long sumOfIPlusOne = (prefSumIdx[end + 1] - prefSumIdx[start] + MOD) % MOD;
+        long totalOffset = (L * count) % MOD;
+        long sigma = (sumOfIPlusOne - totalOffset + MOD) % MOD;
+
+        tree[node] = (sigma * (val % MOD)) % MOD;
+        lazyVal[node] = val;
+        lazyL[node] = L;
+        hasLazy[node] = true;
+    }
+
+    public void update(int node, int start, int end, int l, int r, long val) {
+        if (start > end || start > r || end < l) return;
+        if (start >= l && end <= r) {
+            apply(node, start, end, val, l);
+            return;
+        }
+        push(node, start, end);
+        int mid = (start + end) / 2;
+        update(2 * node, start, mid, l, r, val);
+        update(2 * node + 1, mid + 1, end, l, r, val);
+        tree[node] = (tree[2 * node] + tree[2 * node + 1]) % MOD;
+    }
+
+    public long query(int node, int start, int end, int l, int r) {
+        if (start > end || start > r || end < l) return 0;
+        if (start >= l && end <= r) return tree[node];
+        push(node, start, end);
+        int mid = (start + end) / 2;
+        return (query(2 * node, start, mid, l, r) + query(2 * node + 1, mid + 1, end, l, r)) % MOD;
+    }
+
+    public static void main(String[] args) {
+        // Example Usage:
+        int[] arr = {1, 2, 3, 4, 5};
+        ArrayQueries st = new ArrayQueries(arr);
+        long totalSumOfQueries = 0;
+
+        // Example Query 1: Type 1 (l=1, r=3) -> A[1]=2, so A[1]=1*2, A[2]=2*2, A[3]=3*2
+        // New array: [1, 2, 4, 6, 5]
+        st.update(1, 0, arr.length - 1, 1, 3, 2);
+
+        // Example Query 2: Type 2 (l=0, r=4) -> 1+2+4+6+5 = 18
+        totalSumOfQueries = (totalSumOfQueries + st.query(1, 0, arr.length - 1, 0, 4)) % MOD;
+
+        System.out.println("Result: " + totalSumOfQueries);
+    }
+}

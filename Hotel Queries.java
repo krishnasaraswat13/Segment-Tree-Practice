@@ -3,6 +3,8 @@
 
 //so it will be solve from segment tree tfor optimization and we will build a segment tree for the given array and in the segment tree we will store the maximum number of rooms available in that segment and when we will get the query then we will check if the maximum number of rooms available in that segment is greater than or equal to the required number of rooms then we will go to the left child of that segment tree node and if it is not then we will go to the right child of that segment tree node and we will keep on doing this until we reach a leaf node and if we reach a leaf node then we will check if the number of rooms available in that hotel is greater than or equal to the required number of rooms then we will return the index of that hotel otherwise we will return -1
 //and then update the no of rooms left in that hotel
+import java.util.*;
+
 
 class Solution {
     int arr[];
@@ -49,11 +51,10 @@ class Solution {
         }
         segtree[index] = Math.max(segtree[2 * index + 1], segtree[2 * index + 2]); // Update the current node after updating the child
     }
-}
-public class HotelQueries {
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        PrintWriter out = new PrintWriter(System.out);
+       
 
         int n = sc.nextInt();
         int q = sc.nextInt();
@@ -66,9 +67,9 @@ public class HotelQueries {
         for (int i = 0; i < q; i++) {
             int k = sc.nextInt();
             int result = solution.query(0, 0, n - 1, k);
-            out.println(result + 1); // +1 for 1-based indexing
+            System.out.println(result + 1); // +1 for 1-based indexing
         }
-        out.flush();
+        System.out.flush();
     }
 }   
     
